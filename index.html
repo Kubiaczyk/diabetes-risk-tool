@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Narzędzie AI Ryzyka Cukrzycy typu 2</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #e6f2ff;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 40px auto;
+            padding: 25px;
+            background: white;
+            border-radius: 18px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+
+        h2 {
+            text-align: center;
+            color: #002d62;
+            font-weight: 700;
+        }
+
+        .question {
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+            color: #003366;
+        }
+
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 6px;
+            border: 1px solid #b7cfec;
+            border-radius: 10px;
+            background-color: #f8fbff;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: transform 0.15s;
+        }
+
+        button:hover {
+            transform: scale(1.03);
+            background: #0056b3;
+        }
+
+        #result {
+            margin-top: 25px;
+            padding: 20px;
+            border-radius: 16px;
+            background: white;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.18);
+            font-size: 18px;
+            line-height: 1.5;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.5s ease, transform 0.4s ease;
+        }
+
+        #result.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .result-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #002d62;
+        }
+
+        .result-title img {
+            width: 32px;
+            opacity: 0.9;
+        }
+
+        .risk-low { border-left: 8px solid #2ecc71; }
+        .risk-mid { border-left: 8px solid #f1c40f; }
+        .risk-high { border-left: 8px solid #e67e22; }
+        .risk-very-high { border-left: 8px solid #e74c3c; }
+
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Narzędzie AI Ryzyka Cukrzycy typu 2</h2>
+
+    <div class="question">
+        <label>Ile masz lat?</label>
+        <input type="number" id="wiek" placeholder="Wpisz wiek">
+    </div>
+
+    <div class="question">
+        <label>Wzrost (cm):</label>
+        <input type="number" id="wzrost" placeholder="np. 175">
+    </div>
+
+    <div class="question">
+        <label>Waga (kg):</label>
+        <input type="number" id="waga" placeholder="np. 80">
+    </div>
+
+    <div class="question">
+        <label>Glukoza na czczo (mg/dl):</label>
+        <input type="number" id="glukoza" placeholder="np. 95">
+    </div>
+
+    <div class="question">
+        <label>Ciśnienie skurczowe / rozkurczowe (np. 130/85):</label>
+        <input type="text" id="cisnienie" placeholder="np. 130/85">
+    </div>
+
+    <div class="question">
+        <label>Czy ktoś w rodzinie ma cukrzycę? (tak / nie)</label>
+        <input type="text" id="rodzina" placeholder="np. tak lub nie">
+    </div>
+
+    <button onclick="oblicz()">Oblicz ryzyko</button>
+    <div id="result"></div>
+</div>
+
+<script>
+function oblicz() {
+    let punkty = 0;
+    let braki = false;
+
+    const wiekVal = document.getElementById("wiek").value;
+    if (!wiekVal) braki = true;
+    else {
+        const wiek = parseInt(wiekVal);
+        if (wiek < 45) punkty += 0;
+        else if (wiek <= 54) punkty += 2;
+        else if (wiek <= 64) punkty += 3;
+        else punkty += 4;
+    }
+
+    const wzrostVal = document.getElementById("wzrost").value;
+    const wagaVal = document.getElementById("waga").value;
+    if (!wzrostVal || !wagaVal) braki = true;
+    else {
+        const wzrost = parseFloat(wzrostVal) / 100;
+        const waga = parseFloat(wagaVal);
+        const bmi = waga / (wzrost * wzrost);
+        if (bmi < 25) punkty += 0;
+        else if (bmi < 30) punkty += 1;
+        else punkty += 3;
+    }
+
+    const glukozaVal = document.getElementById("glukoza").value;
+    if (!glukozaVal) braki = true;
+    else {
+        const g = parseFloat(glukozaVal);
+        if (g <= 99) punkty += 0;
+        else if (g <= 124) punkty += 3;
+        else punkty += 5;
+    }
+
+    const cisVal = document.getElementById("cisnienie").value;
+    if (!cisVal || !cisVal.includes("/")) braki = true;
+    else {
+        const [sys, dia] = cisVal.split("/").map(Number);
+        if (sys <= 129 && dia <= 84) punkty += 0;
+        else if (sys <= 139 && dia <= 89) punkty += 3;
+        else if (sys <= 159 && dia <= 99) punkty += 5;
+        else punkty += 7;
+    }
+
+    const rodzinaVal = document.getElementById("rodzina").value.trim().toLowerCase();
+    if (!rodzinaVal) braki = true;
+    else if (rodzinaVal === "tak") punkty += 5;
+
+    let resultBox = document.getElementById("result");
+    let kolor = "";
+    let tytul = "";
+    let opis = "";
+
+    if (punkty <= 4) {
+        kolor = "risk-low";
+        tytul = "Niskie ryzyko";
+        opis = "Wynik prawidłowy. Zalecana coroczna kontrola.";
+    }
+    else if (punkty <= 9) {
+        kolor = "risk-mid";
+        tytul = "Podwyższone ryzyko";
+        opis = "Wykonaj badania kontrolne: glukoza, lipidy, ciśnienie.";
+    }
+    else if (punkty <= 14) {
+        kolor = "risk-high";
+        tytul = "Wysokie ryzyko";
+        opis = "Zalecana konsultacja z lekarzem POZ i badania dodatkowe.";
+    }
+    else {
+        kolor = "risk-very-high";
+        tytul = "Bardzo wysokie ryzyko";
+        opis = "Konieczne pilne badania diagnostyczne.";
+    }
+
+    let brakiInfo = braki ? `<br><i>W celu efektywnej diagnozy uzupełnij brakujące pola.</i>` : "";
+
+    resultBox.className = kolor + " show";
+
+    resultBox.innerHTML = `
+        <div class="result-title">
+            <img src="https://cdn-icons-png.flaticon.com/512/4711/4711987.png">
+            ${tytul}
+        </div>
+        ${opis}
+        ${brakiInfo}
+    `;
+}
+</script>
+</body>
+</html>
