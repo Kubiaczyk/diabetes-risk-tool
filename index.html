@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Narzędzie AI Ryzyka Cukrzycy typu 2</title>
+
     <style>
         body {
             font-family: 'Segoe UI', sans-serif;
@@ -28,7 +29,7 @@
         }
 
         .question {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
 
         label {
@@ -93,48 +94,62 @@
 
         .result-title img {
             width: 32px;
-            opacity: 0.9;
         }
 
         .risk-low { border-left: 8px solid #2ecc71; }
         .risk-mid { border-left: 8px solid #f1c40f; }
         .risk-high { border-left: 8px solid #e67e22; }
         .risk-very-high { border-left: 8px solid #e74c3c; }
-
     </style>
 </head>
+
 <body>
 <div class="container">
     <h2>Narzędzie AI Ryzyka Cukrzycy typu 2</h2>
 
     <div class="question">
         <label>Ile masz lat?</label>
-        <input type="number" id="wiek" placeholder="Wpisz wiek">
+        <input type="number" id="wiek">
     </div>
 
     <div class="question">
-        <label>Wzrost (cm):</label>
-        <input type="number" id="wzrost" placeholder="np. 175">
+        <label>Wzrost (cm)</label>
+        <input type="number" id="wzrost">
     </div>
 
     <div class="question">
-        <label>Waga (kg):</label>
-        <input type="number" id="waga" placeholder="np. 80">
+        <label>Waga (kg)</label>
+        <input type="number" id="waga">
     </div>
 
     <div class="question">
-        <label>Glukoza na czczo (mg/dl):</label>
-        <input type="number" id="glukoza" placeholder="np. 95">
+        <label>Glukoza na czczo (mg/dl)</label>
+        <input type="number" id="glukoza">
     </div>
 
     <div class="question">
-        <label>Ciśnienie skurczowe / rozkurczowe (np. 130/85):</label>
+        <label>Ciśnienie (skurczowe/rozkurczowe)</label>
         <input type="text" id="cisnienie" placeholder="np. 130/85">
     </div>
 
     <div class="question">
-        <label>Czy ktoś w rodzinie ma cukrzycę? (tak / nie)</label>
-        <input type="text" id="rodzina" placeholder="np. tak lub nie">
+        <label>Cukrzyca w rodzinie? (tak / nie)</label>
+        <input type="text" id="rodzina">
+    </div>
+
+    <div class="question">
+        <label>Czy palisz papierosy? (tak / nie)</label>
+        <input type="text" id="palenie">
+    </div>
+
+    <div class="question">
+        <label>Jak często pijesz alkohol?</label>
+        <input type="text" id="alkohol" placeholder="codziennie / 2-3 razy w tygodniu / rzadziej niż raz w miesiącu / nigdy">
+    </div>
+
+    <div class="question">
+        <label>Czy uprawiasz sport? (tak / nie)</label>
+        <input type="text" id="sport">
     </div>
 
     <button onclick="oblicz()">Oblicz ryzyko</button>
@@ -146,90 +161,85 @@ function oblicz() {
     let punkty = 0;
     let braki = false;
 
-    const wiekVal = document.getElementById("wiek").value;
-    if (!wiekVal) braki = true;
+    const wiek = document.getElementById("wiek").value;
+    if (!wiek) braki = true;
+    else if (wiek >= 65) punkty += 4;
+    else if (wiek >= 55) punkty += 3;
+    else if (wiek >= 45) punkty += 2;
+
+    const wzrost = document.getElementById("wzrost").value;
+    const waga = document.getElementById("waga").value;
+    if (!wzrost || !waga) braki = true;
     else {
-        const wiek = parseInt(wiekVal);
-        if (wiek < 45) punkty += 0;
-        else if (wiek <= 54) punkty += 2;
-        else if (wiek <= 64) punkty += 3;
-        else punkty += 4;
+        const bmi = waga / ((wzrost/100) ** 2);
+        if (bmi >= 30) punkty += 3;
+        else if (bmi >= 25) punkty += 1;
     }
 
-    const wzrostVal = document.getElementById("wzrost").value;
-    const wagaVal = document.getElementById("waga").value;
-    if (!wzrostVal || !wagaVal) braki = true;
+    const glukoza = document.getElementById("glukoza").value;
+    if (!glukoza) braki = true;
+    else if (glukoza >= 125) punkty += 5;
+    else if (glukoza >= 100) punkty += 3;
+
+    const cis = document.getElementById("cisnienie").value;
+    if (!cis || !cis.includes("/")) braki = true;
     else {
-        const wzrost = parseFloat(wzrostVal) / 100;
-        const waga = parseFloat(wagaVal);
-        const bmi = waga / (wzrost * wzrost);
-        if (bmi < 25) punkty += 0;
-        else if (bmi < 30) punkty += 1;
-        else punkty += 3;
+        const [s, d] = cis.split("/").map(Number);
+        if (s >= 160 || d >= 100) punkty += 7;
+        else if (s >= 140 || d >= 90) punkty += 5;
+        else if (s >= 130 || d >= 85) punkty += 3;
     }
 
-    const glukozaVal = document.getElementById("glukoza").value;
-    if (!glukozaVal) braki = true;
-    else {
-        const g = parseFloat(glukozaVal);
-        if (g <= 99) punkty += 0;
-        else if (g <= 124) punkty += 3;
-        else punkty += 5;
-    }
+    const rodzina = document.getElementById("rodzina").value.toLowerCase();
+    if (!rodzina) braki = true;
+    else if (rodzina === "tak") punkty += 5;
 
-    const cisVal = document.getElementById("cisnienie").value;
-    if (!cisVal || !cisVal.includes("/")) braki = true;
-    else {
-        const [sys, dia] = cisVal.split("/").map(Number);
-        if (sys <= 129 && dia <= 84) punkty += 0;
-        else if (sys <= 139 && dia <= 89) punkty += 3;
-        else if (sys <= 159 && dia <= 99) punkty += 5;
-        else punkty += 7;
-    }
+    const palenie = document.getElementById("palenie").value.toLowerCase();
+    if (!palenie) braki = true;
+    else if (palenie === "tak") punkty += 2;
 
-    const rodzinaVal = document.getElementById("rodzina").value.trim().toLowerCase();
-    if (!rodzinaVal) braki = true;
-    else if (rodzinaVal === "tak") punkty += 5;
+    const alkohol = document.getElementById("alkohol").value.toLowerCase();
+    if (!alkohol) braki = true;
+    else if (alkohol === "codziennie") punkty += 3;
+    else if (alkohol === "2-3 razy w tygodniu") punkty += 2;
+    else if (alkohol === "rzadziej niż raz w miesiącu") punkty += 1;
 
-    let resultBox = document.getElementById("result");
-    let kolor = "";
-    let tytul = "";
-    let opis = "";
+    const sport = document.getElementById("sport").value.toLowerCase();
+    if (!sport) braki = true;
+    else if (sport === "nie") punkty += 2;
+
+    let wynik = document.getElementById("result");
+    let klasa, tytul, opis;
 
     if (punkty <= 4) {
-        kolor = "risk-low";
+        klasa = "risk-low";
         tytul = "Niskie ryzyko";
-        opis = "Wynik prawidłowy. Zalecana coroczna kontrola.";
-    }
-    else if (punkty <= 9) {
-        kolor = "risk-mid";
+        opis = "Zalecana profilaktyka i okresowe badania.";
+    } else if (punkty <= 9) {
+        klasa = "risk-mid";
         tytul = "Podwyższone ryzyko";
-        opis = "Wykonaj badania kontrolne: glukoza, lipidy, ciśnienie.";
-    }
-    else if (punkty <= 14) {
-        kolor = "risk-high";
+        opis = "Zalecane badania kontrolne (glukoza, lipidogram).";
+    } else if (punkty <= 14) {
+        klasa = "risk-high";
         tytul = "Wysokie ryzyko";
-        opis = "Zalecana konsultacja z lekarzem POZ i badania dodatkowe.";
-    }
-    else {
-        kolor = "risk-very-high";
+        opis = "Zalecana konsultacja z lekarzem POZ.";
+    } else {
+        klasa = "risk-very-high";
         tytul = "Bardzo wysokie ryzyko";
-        opis = "Konieczne pilne badania diagnostyczne.";
+        opis = "Wymagana pilna diagnostyka.";
     }
 
-    let brakiInfo = braki ? `<br><i>W celu efektywnej diagnozy uzupełnij brakujące pola.</i>` : "";
-
-    resultBox.className = kolor + " show";
-
-    resultBox.innerHTML = `
+    wynik.className = klasa + " show";
+    wynik.innerHTML = `
         <div class="result-title">
             <img src="https://cdn-icons-png.flaticon.com/512/4711/4711987.png">
             ${tytul}
         </div>
         ${opis}
-        ${brakiInfo}
+        ${braki ? "<br><i>Uzupełnij wszystkie pola w celu dokładniejszej analizy.</i>" : ""}
     `;
 }
 </script>
+
 </body>
 </html>
